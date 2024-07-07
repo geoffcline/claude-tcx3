@@ -1,56 +1,48 @@
-# Automating TCX3 Title Rewrites with Claude
+# Automate rewriting titles to TCX3 style with Claude
 
-This tool processes AWS documentation, analyzing markdown files and optionally modifying XML files. It uses Claude on AWS Bedrock for text generation and analysis.
+This script automatically generates a new title and abstract for each `<section role=“topic”>` in your guide. The new titles is, hopefully, more task oriented to comply with [TCX3](w.amazon.com). It uses Claude on AWS Bedrock.
 
-## Prerequisites
+For Example:
+- Old Title: Workloads
+- AI Title: Deploying and Scaling Containerized Workloads on Amazon EKS
+- Old Title: Autoscaling
+- AI Title: Auto-scaling Kubernetes Resources with Amazon EKS
+- Old Title: Cluster insights
+- AI Title: Preparing for Kubernetes Version Upgrades with Cluster Insights
 
-- Python 3.x 
-- `mwinit` and `brazil` tools installed
-- Works on Amazon Macs or Cloud Dev Desktops
+[View sample output.](https://amazon.awsapps.com/workdocs-preview/index.html#/document/cdc3021ed6eff7973f534fb9841b3ece54bd4d23117bdb9b8a5e0cceadd74d8e)
 
-## Setup
+The script is moderately complicated to setup, but it can process about ~300 pages per minute. You can view the prompts for both [title generation](https://code.amazon.com/packages/Claude-TCX3/blobs/2c4e1bae442b9a070bfa99e0241c0865b15be4f5/--/src/prompts.py#L60) and [abstract generation](https://code.amazon.com/packages/Claude-TCX3/blobs/2c4e1bae442b9a070bfa99e0241c0865b15be4f5/--/src/prompts.py#L6). Prompt suggestions welcome. I encourage you to try modifying the prompt and running it on your own guide.
 
-1. Clone this repository into the workspace for your guide.
+## How it Works
 
-   ```
-   brazil ws use Claude-TCX3
-   ```
+The script has two modes:
+-  generating tiles/abstracts
+	-  Generate new abstract based on contents of an entire page
+	-  Generate new title based on the new abstract
+	-  Save results to a spreadsheet
+-  Writing the titles/abstracts back to XML.
+	-  Browse through XML for `<section role=“topic”>`
+	-  Lookup the ID of the section in the spreadsheet, and add the new stuff *commented out*.
 
-2. Run the setup script:
+The script starts *a lot* of chats with Claude. It makes about ~400 per minute on my device. 
 
-   ```
-   ./setup.sh
-   ```
+## Workflow overview
+1. Setup: Create Isengard CLI profile, Python Virtual Environment, and Enable Claude on Bedrock
+2. Run Markdown Build of Guide
+3. Run AI Title/Abstract Generation. The output is a CSV file, you can open it in Excel. It has the IDs of sections, followed by the generated titles/abstracts. The old title is provided for context.
+4. Review output. You may decide to revise the prompt for your guide and regenerate the titles. Alternatively, you may edit the titles individually. 
+5. Run Modify XML script. This places the new title/abstract under the `<section>` tag, but importantly they are *commented out*. You must manually uncomment them, add entities, etc. It’s just too complicated an error-prone to overwrite the titles. 
 
-   This script will:
-   - Check for an active `mwinit` session
-   - Verify `isengardcli` is installed
-   - Check and set the AWS_PROFILE
-   - Verify AWS identity
-   - Create and activate a Python virtual environment
-   - Install required dependencies
-
-3. If Necessary - Set up your AWS profile:
-
-   If you haven't already set up your AWS profile, you can use the following command:
-
-   ```
-   isengardcli add-profile
-   ```
-
-   This will interactively guide you through creating a profile for your internal account.
-
-4. Set the AWS_PROFILE environment variable:
-
-   ```
-   export AWS_PROFILE=your-profile-name
-   ```
-
-   Replace `your-profile-name` with the profile name you created or want to use. It's usually `${UserName}-Admin` like `gcline-Admin`.
-
-5. The isengard account you use needs to have the Claude 3 sonnet model enabled. You can only do this in the console. Also you need to use us-east-1 or <<GDC: insert the other region, idk which us-west it is>>
+## Prereqs
+- Personal Isengard Account
+- Claude 3 Sonnet enabled on Isengard Account
+	- [View how to enable in Bedrock docs.](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html#:~:text=To%20request%20access%20to%20a,want%20to%20add%20access%20to.)
+- MacOS or Linux device
 
 ## Create Markdown Build of Guide
+
+Claude seems to really struggle with XML. The markdown build is also nicely formatted with a single file per public page. 
 
 1. Switch to the public version set and build your guide to markdown 
 
@@ -77,28 +69,96 @@ This tool processes AWS documentation, analyzing markdown files and optionally m
    /Users/gcline/workplace/eks-fast/src/AmazonEKSDocs/latest/ug
    ```
 
+
+## Setup
+
+1. Clone this repository into the workspace for your guide.
+
+   ```
+   cd ~/workplace/eks/
+   brazil ws use Claude-TCX3
+   cd Claude-TCX3
+   ```
+
+2. Run the setup script:
+
+   ```
+   ./setup.sh
+   ```
+
+   [View script source.](https://code.amazon.com/packages/Claude-TCX3/blobs/main/--/setup.sh)
+   
+   This script will:
+   - Check for an active `mwinit` session
+   - Verify `isengardcli` is installed
+   - Check and set the AWS_PROFILE
+   - Check AWS CLI is working and authenticated
+   - Create and activate a Python virtual environment
+   - Install required dependencies
+
+3. If Necessary - Set up your Isengard profile for AWS CLI:
+
+   The script will tell you if you don’t have an AWS CLI profile. It’s up at the start, you will need to scroll up past the python requirements installing.
+
+   To create one, you can use the following command:
+
+   ```
+   isengardcli add-profile
+   ```
+
+   This will interactively guide you through creating a profile for your internal account. 
+
+4. Set the AWS_PROFILE environment variable:
+
+   ```
+   export AWS_PROFILE=your-profile-name
+   ```
+
+   Replace `your-profile-name` with the profile name you created or want to use. It's usually `${UserName}-Admin` like `gcline-Admin`.
+   
+5. Set region to `us-east-1`
+
+```
+export AWS_REGION=us-east-1
+```
+
 ## Configuration
 
 1. Open the `config.yaml` file and adjust the settings as needed:
 
+   [View config.yaml](https://code.amazon.com/packages/Claude-TCX3/blobs/main/--/config.yaml)
 
    Must Change:
    - `SERVICE_NAME`: The service name (e.g., "Amazon EKS")
-   - `MARKDOWN_DIRECTORY`: Path to the markdown build directory
+   - `MARKDOWN_DIRECTORY`: Path to the markdown build output directory
 
-
-   May Change:
+   Configuration options for Title Generation:
    - `MAX_FILES`: Number of markdown files to process
      - set this to ~10 while you are testing
    - `OUTPUT_CSV_FILE`: Path for the output CSV file
    - `MAX_WORKERS`: Number of concurrent workers
+	   - ~10-20. Bedrock has a max of 500 requests per minute for Claude 3 Sonnet.
+   - `BEDROCK_MODEL`: AWS Bedrock model to use
+
+	 Configuration options for XML Rewriting:
+   - `REWRITE_INPUT_FILE`: Input file for XML modification
+	   - You could set this to the same CSV file as the generation output. 
+   - `XML_DIRECTORY`: Directory containing XML files to modify
+	   - Should have “book.xml” in it. 
+
+   Advanced Options:
    - `LOGGING_DIR`: Directory for log files
    - `CONSOLE_LOGS_ENABLED`: Enable/disable console logging
-   - `BEDROCK_MODEL`: AWS Bedrock model to use
-   - `REWRITE_INPUT_FILE`: Input file for XML modification
-   - `XML_DIRECTORY`: Directory containing XML files to modify
+ 
+
 
 ## Usage - Generate Titles & Abstracts
+
+1. Double check AWS_PROFILE and AWS_REGION is set
+
+   ```
+   echo My Profile is $AWS_PROFILE and my region is $AWS_REGION
+   ```
 
 1. Activate the Python virtual environment:
 
@@ -106,21 +166,29 @@ This tool processes AWS documentation, analyzing markdown files and optionally m
    source venv/bin/activate
    ```
 
-2. Run the main script:
+1. Run the main script:
 
    For normal operation (generating titles/abstracts):
    ```
    python main.py
    ```
 
-3. Check the output:
+1. Check the output:
    - For normal operation, results will be saved to the CSV file specified in `OUTPUT_CSV_FILE`.
 
-## Usage - Add Output to XML
+1. Deactivate the python environment
+
+   ```
+   deactivate
+   ```
+
+## Usage - Modify XML
 
    - Check out a new branch before doing this
    - `REWRITE_INPUT_FILE`: Input CSV file for XML modification
    - `XML_DIRECTORY`: Directory containing XML files to modify
+   - Note this adds the new tags as *comments*, you will need to uncomment them and add entities.
+   - Look at the repo with SourceTree or another git tool to browse the changes.
 
    ```shell
    pyhton main.py --modify-xml
