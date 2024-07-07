@@ -194,6 +194,8 @@ export AWS_REGION=us-east-1
    pyhton main.py --modify-xml
    ```
 
+[View sample CR with comments added](https://code.amazon.com/reviews/CR-136403938/revisions/1#/diff)
+
 ## Troubleshooting
 
 - If you encounter AWS authentication issues, ensure your `mwinit` session is active and your AWS_PROFILE is correctly set.

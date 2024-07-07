@@ -8,18 +8,18 @@ SERVICE_NAME: "Amazon EKS"
 # should have markdown files named by ID of the section
 MARKDOWN_DIRECTORY: "/Users/gcline/workplace/eks-fast/src/AmazonEKSDocs/build/markdown/eks/latest/userguide"
 
-OUTPUT_CSV_FILE: "output/claude-tcx3-eks-v7.csv"
+OUTPUT_CSV_FILE: "output/claude-tcx3-eks-v8.csv"
 
 # concurrency, set low for debugging (1-5) and high for prod (10-20)
 MAX_WORKERS: 15
 
 # debugging settings
 LOGGING_DIR: "output/logs"
-CONSOLE_LOGS_ENABLED: false
+CONSOLE_LOGS_ENABLED: true
 
 # aws bedrock list-foundation-models --by-provider anthropic
 BEDROCK_MODEL: "anthropic.claude-3-sonnet-20240229-v1:0"
 
 # Used for Excel -> XML Modification
-REWRITE_INPUT_FILE: "output/claude-tcx3-eks-v7.csv"
+REWRITE_INPUT_FILE: "output/claude-tcx3-eks-v8.csv"
 XML_DIRECTORY: "/Users/gcline/workplace/eks-fast/src/AmazonEKSDocs/latest/ug"
