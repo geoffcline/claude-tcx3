@@ -44,30 +44,20 @@ check_aws_profile() {
         PROFILE="${USERNAME}-Admin"
         if grep -q "\[profile ${PROFILE}\]" ~/.aws/config; then
             export AWS_PROFILE="${PROFILE}"
-            log "AWS_PROFILE set to ${PROFILE}"
+            log "You need to set AWS_PROFILE to ${PROFILE}"
         else
             log "Warning: AWS_PROFILE not set and ${PROFILE} not found in ~/.aws/config"
         fi
     else
-        log "AWS_PROFILE is set to $AWS_PROFILE"
+        log "Your AWS_PROFILE was already set to $AWS_PROFILE"
     fi
-    
-    # Export AWS_PROFILE to ensure it's available to subprocesses
-    export AWS_PROFILE
-    
-    # Debug: Print all AWS-related environment variables
-    log "AWS-related environment variables:"
-    env | grep AWS
+
 }
 
 # Check AWS identity
 check_aws_identity() {
     log "Checking AWS identity..."
-    
-    # Debug: Print current AWS configuration
-    log "Current AWS configuration:"
-    aws configure list
-    
+
     # Attempt to get caller identity
     CALLER_IDENTITY=$(aws sts get-caller-identity 2>&1)
     if [ $? -ne 0 ]; then
@@ -75,10 +65,10 @@ check_aws_identity() {
         log "$CALLER_IDENTITY"
         exit 1
     fi
-    
+
     log "AWS Caller Identity:"
     echo "$CALLER_IDENTITY"
-    
+
     if ! echo "$CALLER_IDENTITY" | grep -q "Isengard"; then
         log "Error: 'Isengard' not found in the ARN."
         exit 1
@@ -118,6 +108,9 @@ main() {
     check_aws_identity
     setup_venv
     install_requirements
+
+    # not tested - model is valid and enabled
+    # not tested - structure of markdown directory
 
     log "Setup and verification completed successfully."
 }

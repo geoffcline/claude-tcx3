@@ -6,6 +6,25 @@ import logging
 import subprocess
 import json
 
+def verify_aws_environment(config, logger):
+    logger.info("Verifying AWS environment...")
+
+    # Check AWS_PROFILE environment variable
+    if 'AWS_PROFILE' in os.environ:
+        logger.info(f"AWS_PROFILE is set to: {os.environ['AWS_PROFILE']}")
+    else:
+        logger.error("AWS_PROFILE environment variable is not set.")
+        return False
+
+    # Check AWS identity
+    if check_aws_identity():
+        logger.info("AWS identity check passed. 'isengard' found in the ARN.")
+    else:
+        logger.error("AWS identity check failed or 'isengard' not found in the ARN.")
+        return False
+
+    logger.info("All AWS environment checks passed successfully!")
+    return True
 
 def read_markdown_file(file_path):
     logger = logging.getLogger(f"FileReader-{os.path.basename(file_path)}")
@@ -57,20 +76,6 @@ def extract_title(content):
     logger.warning("No title found in the content")
     return ""
 
-def check_isengardcli():
-    try:
-        result = subprocess.run(['which', 'isengardcli'], capture_output=True, text=True)
-        if result.returncode == 0:
-            return result.stdout.strip()
-        else:
-            return None
-    except Exception as e:
-        logging.error(f"Error checking for isengardcli: {e}")
-        return None
-
-def suggest_aws_profile():
-    username = os.getenv('USER', 'unknown')
-    return f"{username}-Admin"
 
 def check_aws_identity():
     try:
@@ -84,6 +89,7 @@ def check_aws_identity():
     except Exception as e:
         logging.error(f"Error checking AWS identity: {e}")
         return False
+
 
 def extract_first_paragraph(content):
     logger = logging.getLogger('ParagraphExtractor')
