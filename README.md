@@ -2,7 +2,6 @@
 
 This tool processes AWS documentation, analyzing markdown files and optionally modifying XML files. It uses Claude on AWS Bedrock for text generation and analysis.
 
-
 ## Prerequisites
 
 - Python 3.x 
@@ -99,7 +98,7 @@ This tool processes AWS documentation, analyzing markdown files and optionally m
    - `REWRITE_INPUT_FILE`: Input file for XML modification
    - `XML_DIRECTORY`: Directory containing XML files to modify
 
-## Usage
+## Usage - Generate Titles & Abstracts
 
 1. Activate the Python virtual environment:
 
@@ -114,25 +113,18 @@ This tool processes AWS documentation, analyzing markdown files and optionally m
    python main.py
    ```
 
-   To only verify the environment:
-   ```
-   python main.py --verify
-   ```
-
-   To modify XML files:
-   ```
-   python main.py --modify-xml
-   ```
-
-   You can specify a different config file using the `--config` option:
-   ```
-   python main.py --config custom_config.yaml
-   ```
-
 3. Check the output:
    - For normal operation, results will be saved to the CSV file specified in `OUTPUT_CSV_FILE`.
-   - For XML modification, check the modified files in the `XML_DIRECTORY`.
-   - Logs can be found in the directory specified by `LOGGING_DIR`.
+
+## Usage - Add Output to XML
+
+   - Check out a new branch before doing this
+   - `REWRITE_INPUT_FILE`: Input CSV file for XML modification
+   - `XML_DIRECTORY`: Directory containing XML files to modify
+
+   ```shell
+   pyhton main.py --modify-xml
+   ```
 
 ## Troubleshooting
 
@@ -195,7 +187,7 @@ How to work with virtual environments:
    This creates a new directory `venv` containing the virtual environment.
 
 2. Activating a venv:
-   - On Unix or MacOS:
+   - On Linux or MacOS:
      ```
      source venv/bin/activate
      ```
@@ -203,12 +195,6 @@ How to work with virtual environments:
 
 3. Using the venv:
    Once activated, any Python commands you run will use the Python interpreter and libraries in the virtual environment.
-
-4. Installing packages:
-   With the venv activated, use pip to install packages. They'll be installed only in this environment:
-   ```
-   pip install package-name
-   ```
 
 5. Deactivating the venv:
    When you're done working in the virtual environment, you can deactivate it:
