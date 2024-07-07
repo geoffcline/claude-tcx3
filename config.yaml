@@ -1,8 +1,8 @@
-MAX_FILES: 300
+MAX_FILES: 3
 SERVICE_NAME: "Amazon EKS"
-MARKDOWN_DIRECTORY: "input-markdown"
+MARKDOWN_DIRECTORY: "/home/gcline/workplace/eks/src/AmazonEKSDocs/build/markdown/eks/latest/userguide"
 OUTPUT_CSV_FILE: "output/claude-tcx3-eks-v4.csv"
 LOGGING_DIR: "output/logs"
-MAX_WORKERS: 20
-CONSOLE_LOGS_ENABLED: false
+MAX_WORKERS: 4
+CONSOLE_LOGS_ENABLED: true
 BEDROCK_MODEL: "anthropic.claude-3-sonnet-20240229-v1:0"
