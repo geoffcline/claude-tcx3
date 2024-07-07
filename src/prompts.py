@@ -1,12 +1,16 @@
-from main import SERVICE_NAME
 import json
+import logging
+from config import get_config
 
 
 def generate_abstract(bedrock, content, filename):
-    print(f"Generating abstract for {filename}...")
+    config = get_config()
+    logger = logging.getLogger(f"AbstractGenerator-{filename}")
+    logger.info(f"Generating abstract for {filename}...")
+
     prompt = f"""Create a concise abstract for a documentation section. The abstract should not exceed 160 characters.
 
-Context: This is a section of a technical documentation website for {SERVICE_NAME}. Filename: {filename}
+Context: This is a section of a technical documentation website for {config['SERVICE_NAME']}. Filename: {filename}
 
 Instructions:
 1. Analyze the content thoroughly.
@@ -34,7 +38,7 @@ Good abstract: Use allocation strategies to manage how Auto Scaling fulfills On-
 Important: Provide ONLY the abstract text, without any additional formatting, headings, or metadata.
 
 Markdown Content:
-{content}  # Using entire content as requested
+{content}
 
 Abstract:"""
 
@@ -44,19 +48,21 @@ Abstract:"""
         "anthropic_version": "bedrock-2023-05-31"
     })
 
-    print("Sending request to Bedrock for abstract generation...")
-    response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-sonnet-20240229-v1:0")
-    print("Received response from Bedrock.")
+    logger.info("Sending request to Bedrock for abstract generation...")
+    response = bedrock.invoke_model(body=body, modelId=config['BEDROCK_MODEL'])
+    logger.info("Received abstract response from Bedrock.")
 
     response_body = json.loads(response.get("body").read())
     abstract = response_body.get("content", [{}])[0].get("text", "").strip()
-    print(f"Generated abstract of {len(abstract)} characters.")
+    logger.info(f"Generated abstract of {len(abstract)} characters.")
     return abstract
 
+def generate_new_title(bedrock, original_title, abstract, filename):
+    config = get_config()
+    logger = logging.getLogger(f"TitleGenerator-{filename}")
+    logger.info(f"Generating title for {filename}...")
 
-def generate_new_title(bedrock, original_title, abstract):
-    print(f"Generating new title based on original title: {original_title}")
-    prompt = f"""Generate a new title for a {SERVICE_NAME} technical documentation page based on the following guidelines:
+    prompt = f"""Generate a new title for a {config['SERVICE_NAME']} technical documentation page based on the following guidelines:
 
     1. Length: 40-70 characters, preferring shorter titles when possible
     2. Style: Clear, concise, and appropriate for technical documentation
@@ -64,7 +70,7 @@ def generate_new_title(bedrock, original_title, abstract):
     4. Format: 
        - Avoid using colons (:)
        - Avoid two-part titles (e.g., "Creating an Amazon EKS Cluster: A Step-by-Step Guide")
-    5. Context: Specific to {SERVICE_NAME} services and features
+    5. Context: Specific to {config['SERVICE_NAME']} services and features
 
     Prime Example:
     - Original: "Horizontal Pod Autoscaler"
@@ -100,11 +106,11 @@ def generate_new_title(bedrock, original_title, abstract):
         "anthropic_version": "bedrock-2023-05-31"
     })
 
-    print("Sending request to Bedrock for title generation...")
-    response = bedrock.invoke_model(body=body, modelId="anthropic.claude-3-sonnet-20240229-v1:0")
-    print("Received response from Bedrock.")
+    logger.info("Sending request to Bedrock for title generation...")
+    response = bedrock.invoke_model(body=body, modelId=config['BEDROCK_MODEL'])
+    logger.info("Received title response from Bedrock.")
 
     response_body = json.loads(response.get("body").read())
     new_title = response_body.get("content", [{}])[0].get("text", "").strip()
-    print(f"Generated new title: {new_title}")
+    logger.info(f"Generated new title: {new_title}")
     return new_title
