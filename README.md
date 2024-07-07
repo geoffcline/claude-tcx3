@@ -1,6 +1,6 @@
 # Automate rewriting titles to TCX3 style with Claude
 
-This script automatically generates a new title and abstract for each `<section role=“topic”>` in your guide. The new titles is, hopefully, more task oriented to comply with [TCX3](w.amazon.com). It uses Claude on AWS Bedrock.
+This script automatically generates a new title and abstract for each `<section role=“topic”>` in your guide. The new title is, hopefully, more task oriented to comply with [TCX3](https://w.amazon.com/bin/view/AWS_TCX/TCX_Bridge/Content_Strategy/TCX3_2024). It uses Claude on AWS Bedrock.
 
 For Example:
 - Old Title: Workloads
@@ -12,7 +12,7 @@ For Example:
 
 [View sample output.](https://amazon.awsapps.com/workdocs-preview/index.html#/document/cdc3021ed6eff7973f534fb9841b3ece54bd4d23117bdb9b8a5e0cceadd74d8e)
 
-The script is moderately complicated to setup, but it can process about ~300 pages per minute. You can view the prompts for both [title generation](https://code.amazon.com/packages/Claude-TCX3/blobs/2c4e1bae442b9a070bfa99e0241c0865b15be4f5/--/src/prompts.py#L60) and [abstract generation](https://code.amazon.com/packages/Claude-TCX3/blobs/2c4e1bae442b9a070bfa99e0241c0865b15be4f5/--/src/prompts.py#L6). Prompt suggestions welcome. I encourage you to try modifying the prompt and running it on your own guide.
+The script is moderately complicated to setup, but it can process about ~200 pages per minute. You can view the prompts for both [title generation](https://code.amazon.com/packages/Claude-TCX3/blobs/2c4e1bae442b9a070bfa99e0241c0865b15be4f5/--/src/prompts.py#L60) and [abstract generation](https://code.amazon.com/packages/Claude-TCX3/blobs/2c4e1bae442b9a070bfa99e0241c0865b15be4f5/--/src/prompts.py#L6). Prompt suggestions welcome. I encourage you to try modifying the prompt and running it on your own guide.
 
 ## How it Works
 
@@ -170,7 +170,7 @@ export AWS_REGION=us-east-1
 
    For normal operation (generating titles/abstracts):
    ```
-   python main.py
+   python src/main.py
    ```
 
 1. Check the output:
