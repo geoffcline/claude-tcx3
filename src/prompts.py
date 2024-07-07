@@ -68,40 +68,36 @@ def generate_new_title(bedrock, original_title, abstract, filename):
     2. Style: Clear, concise, and appropriate for technical documentation
     3. Focus: Customer-centric, reflecting specific scenarios or tasks
     4. Format: 
-       - Use imperative mood (command form)
        - Avoid using colons (:)
-       - Avoid two-part titles
+       - Avoid two-part titles (e.g., "Creating an Amazon EKS Cluster: A Step-by-Step Guide")
     5. Context: Specific to {config['SERVICE_NAME']} services and features
 
     Prime Example:
     - Original: "Horizontal Pod Autoscaler"
-      New: "Auto-scale Kubernetes Pods with Horizontal Pod Autoscaler"
+      New: "Auto-scaling Kubernetes Pods with Horizontal Pod Autoscaler"
 
     Examples:
     - Original: "Behaviors"
-      New: "Configure Security Profile Behaviors using Rules Detect or ML Detect"
+      New: "Configuring Security Profile Behaviors using Rules Detect or ML Detect"
     - Original: "Job Definition Parameters"
-      New: "Set Up Job Definition Parameters"
+      New: "Setting Up Job Definition Parameters"
     - Original: "Amazon EKS ended support for Dockershim"
-      New: "Migrate from Dockershim to containerd"
+      New: "Migrating from Dockershim to containerd"
     - Original: "Amazon EKS optimized AMIs"
       New: "Deploy Nodes with Amazon EKS Optimized AMIs"
 
-    Avoid "Manage" or any -ing verbs. Instead, use action verbs that describe the specific task or goal.
-    Examples:
-    - Instead of: "Managing Job Dependencies in AWS Batch"
-      Use: "Configure Job Dependencies in AWS Batch"
-    - Instead of: "Managing Long-Running Job Timeouts with AWS Batch"
-      Use: "Set Up Long-Running Job Timeouts in AWS Batch"
-
-    Consider the abstract to understand the main task or goal the user wants to accomplish.
+    Avoid "Managing". 
+    - Avoid: Managing Job Dependencies in AWS Batch
+    - Avoid: Managing Long-Running Job Timeouts with AWS Batch
+    Instead of "Managing" think of the abstract and why someone might want to use this feature. 
+    What task are they looking to do?
 
     Input:
     Original Title: {original_title}
     Abstract: {abstract}
 
     Output:
-    Provide only the new title in imperative mood, without any additional text or formatting.
+    Provide only the new title, without any additional text or formatting.
     """
 
     body = json.dumps({
