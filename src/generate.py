@@ -3,7 +3,8 @@ from config import get_config
 import utils, prompts
 import os
 import concurrent.futures
-import tqdm
+from tqdm.auto import tqdm
+
 
 def process_single_file(file_path, bedrock_client):
     logger = logging.getLogger(f"FileProcessor-{os.path.basename(file_path)}")
