@@ -21,5 +21,5 @@ CONSOLE_LOGS_ENABLED: false
 BEDROCK_MODEL: "anthropic.claude-3-sonnet-20240229-v1:0"
 
 # Used for Excel -> XML Modification
-EXCEL_OUTPUT_FILE: "claude-tcx3-eks-v4.xlsx"
+REWRITE_INPUT_FILE: "output/claude-tcx3-eks-v6.csv"
 XML_DIRECTORY: "/Users/gcline/workplace/eks-fast/src/AmazonEKSDocs/latest/ug"

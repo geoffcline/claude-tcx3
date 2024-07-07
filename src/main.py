@@ -32,7 +32,7 @@ def main():
 
         # mode switch, modify xml vs regular (generate titles/abstracts)
         if args.modify_xml:
-            modify.modify_xml_files(config['EXCEL_OUTPUT_FILE'], config['XML_DIRECTORY'])
+            modify.modify_xml_files(config['REWRITE_INPUT_FILE'], config['XML_DIRECTORY'])
         else:
             bedrock_client = utils.initialize_bedrock()
             logger.info("Starting concurrent markdown processing and analysis...")

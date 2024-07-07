@@ -5,16 +5,16 @@ import os
 import re
 
 
-def modify_xml_files(excel_path, xml_directory):
+def modify_xml_files(csv_path, xml_directory):
     logger = logging.getLogger(__name__)
     logger.info(f"Starting XML modification process")
-    logger.info(f"Excel file path: {excel_path}")
+    logger.info(f"CSV file path: {csv_path}")
     logger.info(f"XML directory: {xml_directory}")
 
     try:
-        # Read the Excel file
-        df = pd.read_excel(excel_path)
-        logger.info(f"Successfully read Excel file. Found {len(df)} rows.")
+        # Read the CSV file
+        df = pd.read_csv(csv_path)
+        logger.info(f"Successfully read CSV file. Found {len(df)} rows.")
 
         # Remove ".md" suffix from ID column
         df['File Name'] = df['File Name'].str.replace('.md$', '', regex=True)
@@ -37,7 +37,7 @@ def modify_xml_files(excel_path, xml_directory):
 
                         modified = False
                         for section_id in sections:
-                            # Find matching row in Excel
+                            # Find matching row in CSV
                             row = df[df['File Name'] == section_id]
                             if not row.empty:
                                 title = row['AI Generated Title'].values[0]
