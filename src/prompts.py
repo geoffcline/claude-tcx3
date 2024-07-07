@@ -1,6 +1,7 @@
 import json
 import logging
 from config import get_config
+from botocore.exceptions import BotoCoreError, ClientError
 
 
 def generate_abstract(bedrock, content, filename):
@@ -70,27 +71,36 @@ def generate_new_title(bedrock, original_title, abstract, filename):
     4. Format: 
        - Avoid using colons (:)
        - Avoid two-part titles (e.g., "Creating an Amazon EKS Cluster: A Step-by-Step Guide")
+       - Use the imperative mood. Avoid -ing, such as "Deploying". Use "Deploy"
     5. Context: Specific to {config['SERVICE_NAME']} services and features
-
-    Prime Example:
-    - Original: "Horizontal Pod Autoscaler"
-      New: "Auto-scaling Kubernetes Pods with Horizontal Pod Autoscaler"
-
-    Examples:
-    - Original: "Behaviors"
-      New: "Configuring Security Profile Behaviors using Rules Detect or ML Detect"
-    - Original: "Job Definition Parameters"
-      New: "Setting Up Job Definition Parameters"
-    - Original: "Amazon EKS ended support for Dockershim"
-      New: "Migrating from Dockershim to containerd"
-    - Original: "Amazon EKS optimized AMIs"
-      New: "Deploy Nodes with Amazon EKS Optimized AMIs"
 
     Avoid "Managing". 
     - Avoid: Managing Job Dependencies in AWS Batch
     - Avoid: Managing Long-Running Job Timeouts with AWS Batch
     Instead of "Managing" think of the abstract and why someone might want to use this feature. 
     What task are they looking to do?
+
+    Examples:
+    - Original: "Behaviors"
+      New: "Configure Security Profile Behaviors using Rules Detect or ML Detect"
+    - Original: "Job Definition Parameters"
+      New: "Set Up Job Definition Parameters"
+    - Original: "Amazon EKS ended support for Dockershim"
+      New: "Migrate from Dockershim to containerd"
+    - Original: "Amazon EKS optimized AMIs"
+      New: "Deploy Nodes with Amazon EKS Optimized AMIs"
+    - Original: "Vertical Pod Autoscaler"
+      New: "Adjust Pod Resources with Vertical Pod Autoscaler"
+    - Original: "Horizontal Pod Autoscaler"
+      New: "Scale Pod Deployments with Horizontal Pod Autoscaler"
+    - Original: "Cluster insights"
+      New: "Prepare for Kubernetes Version Upgrades with Cluster Insights"
+    - Original: "Prometheus metrics"
+      New: "Monitor Containerized Apps and Clusters with Amazon Managed Prometheus"
+    - Original: "Amazon VPC Lattice"
+      New: "Enable Secure Cross-Cluster Connectivity with Amazon VPC Lattice"
+    - Original: "Amazon EKS and AWS Local Zones"
+      New: "Launch Low-Latency EKS Clusters with AWS Local Zones"
 
     Input:
     Original Title: {original_title}
@@ -114,3 +124,36 @@ def generate_new_title(bedrock, original_title, abstract, filename):
     new_title = response_body.get("content", [{}])[0].get("text", "").strip()
     logger.info(f"Generated new title: {new_title}")
     return new_title
+
+
+def validate_bedrock_connection(bedrock_client, model_id):
+    logger = logging.getLogger(__name__)
+    logger.info("Validating Bedrock connection...")
+    config = get_config()
+
+    try:
+        # Prepare a simple prompt for the test call
+
+        body = json.dumps({
+            "max_tokens": 256,
+            "messages": [{"role": "user", "content": "Hello Claude!"}],
+            "anthropic_version": "bedrock-2023-05-31"
+        })
+
+        # Make the test call to Bedrock
+        response = bedrock_client.invoke_model(body=body, modelId=config['BEDROCK_MODEL'])
+
+        # Check if the response is valid
+        if response['ResponseMetadata']['HTTPStatusCode'] != 200:
+            raise ValueError(f"Unexpected status code: {response['ResponseMetadata']['HTTPStatusCode']}")
+
+        # Try to parse the response body
+        response_body = json.loads(response['body'].read())
+
+        logger.info("Bedrock connection validated successfully.")
+    except (BotoCoreError, ClientError) as e:
+        logger.error(f"AWS or Bedrock API error: {str(e)}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during Bedrock validation: {str(e)}")
+        raise

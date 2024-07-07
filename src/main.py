@@ -1,9 +1,9 @@
 import os
-import utils, generate, logging_config, modify
+import utils, generate, logging_config, modify, prompts
 import logging
 import argparse
 from config import load_config, get_config
-
+from botocore.exceptions import BotoCoreError, ClientError
 
 def main():
     parser = argparse.ArgumentParser(description="Process markdown files and modify XML with configurable settings.")
@@ -16,12 +16,13 @@ def main():
         load_config(args.config)
         config = get_config()
 
-        logging_config.setup_logging(log_level=logging.INFO, console_output=config['CONSOLE_LOGS_ENABLED'],
-                                     log_dir=config['LOGGING_DIR'])
-        logger = logging.getLogger("Main")
+        logger = logging_config.setup_logging(
+            log_level=logging.DEBUG,  # Capture all log levels in the file
+            log_dir=config['LOGGING_DIR']
+        )
 
         # Run Environment Checks
-        if not utils.verify_aws_environment(config, logger):
+        if not utils.verify_aws_environment(config):
             logger.error("AWS environment verification failed. Please check the logs and resolve any issues.")
             return
 
@@ -34,15 +35,24 @@ def main():
         if args.modify_xml:
             modify.modify_xml_files(config['REWRITE_INPUT_FILE'], config['XML_DIRECTORY'])
         else:
-            bedrock_client = utils.initialize_bedrock()
-            logger.info("Starting concurrent markdown processing and analysis...")
-            results = generate.process_markdown_files(config['MARKDOWN_DIRECTORY'], bedrock_client)
-            utils.save_to_csv(results, config['OUTPUT_CSV_FILE'])
-            logger.info(f"Markdown analysis completed. Results saved to {config['OUTPUT_CSV_FILE']}")
+            try:
+                bedrock_client = utils.initialize_bedrock()
+
+                prompts.validate_bedrock_connection(bedrock_client, config['BEDROCK_MODEL'])
+
+                logger.info("Starting concurrent markdown processing and analysis...")
+                results = generate.process_markdown_files(config['MARKDOWN_DIRECTORY'], bedrock_client)
+                utils.save_to_csv(results, config['OUTPUT_CSV_FILE'])
+                logger.info(f"Markdown analysis completed. Results saved to {config['OUTPUT_CSV_FILE']}")
+            except Exception as e:
+                logger.error(f"Error during markdown processing: {e}", exc_info=True)
 
         logger.info("Process completed successfully.")
     except Exception as e:
-        logger.error(f"An error occurred during processing: {e}")
+        if logger:
+            logger.error(f"An error occurred during processing: {e}", exc_info=True)
+        else:
+            print(f"An error occurred during processing: {e}")
 
 
 if __name__ == "__main__":

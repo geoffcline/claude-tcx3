@@ -6,7 +6,9 @@ import logging
 import subprocess
 import json
 
-def verify_aws_environment(config, logger):
+logger = logging.getLogger(__name__)
+
+def verify_aws_environment(config):
     logger.info("Verifying AWS environment...")
 
     # Check AWS_PROFILE environment variable
@@ -25,6 +27,7 @@ def verify_aws_environment(config, logger):
 
     logger.info("All AWS environment checks passed successfully!")
     return True
+
 
 def read_markdown_file(file_path):
     logger = logging.getLogger(f"FileReader-{os.path.basename(file_path)}")
@@ -95,35 +98,48 @@ def extract_first_paragraph(content):
     logger = logging.getLogger('ParagraphExtractor')
     logger.info("Starting first paragraph extraction")
 
-    lines = content.split('\n')
-    paragraph = []
-    skip_mode = False
-    blank_line_encountered = False
+    try:
+        lines = content.split('\n')
+        paragraph = []
+        ignore_block = False
+        content_started = False
 
-    for i, line in enumerate(lines):
-        stripped_line = line.strip()
+        for i, line in enumerate(lines):
+            stripped_line = line.strip()
 
-        if not stripped_line:
-            if skip_mode:
-                skip_mode = False
-                logger.debug(f"Exiting skip mode at line {i}")
-            elif paragraph:
-                logger.debug(f"End of paragraph encountered at line {i}")
-                break  # End of a non-skipped paragraph
-            blank_line_encountered = True
-            continue
+            # Check if we're at the start of the file and encountering the dashed block
+            if i == 0 and stripped_line.startswith('--------'):
+                ignore_block = True
+                logger.debug("Ignoring initial dashed block")
+                continue
 
-        if stripped_line.startswith('**'):
-            skip_mode = True
-            paragraph = []  # Reset any collected paragraph
-            logger.debug(f"Entering skip mode at line {i}")
-            continue
+            # If we're ignoring the block, check for its end
+            if ignore_block:
+                if stripped_line.startswith('--------'):
+                    ignore_block = False
+                    logger.debug("Finished ignoring initial dashed block")
+                continue
 
-        if not skip_mode and blank_line_encountered:
-            if not stripped_line.startswith('#'):
-                paragraph.append(stripped_line)
-                logger.debug(f"Added line to paragraph: {stripped_line[:30]}...")
+            # Ignore empty lines and lines starting with '**'
+            if not stripped_line or stripped_line.startswith('**'):
+                continue
 
-    result = ' '.join(paragraph)
-    logger.info(f"Extracted first paragraph: {result[:50]}...")
-    return result
+            if stripped_line.startswith('#'):
+                if content_started:
+                    break  # Stop if we encounter a new heading after content has started
+                continue  # Skip headers
+
+            content_started = True
+            paragraph.append(stripped_line)
+            logger.debug(f"Added line to paragraph: {stripped_line[:30]}...")
+
+            # Break if we've found a non-empty paragraph
+            if paragraph:
+                break
+
+        result = ' '.join(paragraph)
+        logger.info(f"Extracted first paragraph: {result[:50]}...")
+        return result
+    except Exception as e:
+        logger.error(f"Error extracting first paragraph: {str(e)}")
+        return ""
