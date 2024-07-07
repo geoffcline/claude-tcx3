@@ -1,2 +1,4 @@
 output/*
 input-markdown/*
+*.xlsx
+*.xml
