@@ -1,4 +1,4 @@
-# EKS Documentation Processing Tool
+# Automating TCX3 Title Rewrites with Claude
 
 This tool processes AWS documentation, analyzing markdown files and optionally modifying XML files. It uses Claude on AWS Bedrock for text generation and analysis.
 
