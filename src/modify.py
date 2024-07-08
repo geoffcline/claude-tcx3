@@ -44,12 +44,12 @@ def modify_xml_files(csv_path, xml_directory):
                                 abstract = row['AI Generated Abstract'].values[0]
                                 logger.debug(f"Found matching data for section ID: {section_id}")
 
-                                # Create new XML lines wrapped in a comment
+                                # Create new XML lines wrapped in a comment with unique markers
                                 new_lines = f'''
-    <!-- Auto-generated content
+    <!-- START_AUTO_GENERATED_CONTENT
     <title id="{section_id}.title">{title}</title>
     <abstract><para>{abstract}</para></abstract>
-    -->
+    END_AUTO_GENERATED_CONTENT -->
     '''
 
                                 # Find the position to insert the new lines
@@ -58,7 +58,7 @@ def modify_xml_files(csv_path, xml_directory):
                                     insert_pos = section_start.end()
 
                                     # Check if the content already exists
-                                    if new_lines not in content[insert_pos:insert_pos + len(new_lines) + 100]:
+                                    if 'START_AUTO_GENERATED_CONTENT' not in content[insert_pos:insert_pos + 100]:
                                         # Insert the new lines
                                         content = content[:insert_pos] + new_lines + content[insert_pos:]
                                         modified = True

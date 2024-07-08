@@ -201,6 +201,7 @@ export AWS_REGION=us-east-1
 - If you encounter AWS authentication issues, ensure your `mwinit` session is active and your AWS_PROFILE is correctly set.
 - If you encounter issues with Bedrock, check that the Claude 3 Sonnet model is enabled.
 - For any other issues, check the log files in the `LOGGING_DIR` for detailed error messages.
+- Check region in AWS CLI Profile supports Claude 3 Sonnet
 
 ## Learn more about AWS CLI Environment Variables
 
