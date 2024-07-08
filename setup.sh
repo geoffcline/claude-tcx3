@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+# set -x
 
 # Function to log messages
 log() {
@@ -12,14 +12,19 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Check mwinit
+# Function to check SSH connection to git.amazon.com
 check_mwinit() {
-    log "Checking mwinit..."
-    if ! mwinit -l | grep -q .; then
-        log "mwinit session is not active. Please run 'mwinit -s' and try again."
+    log "Checking SSH connection to git.amazon.com..."
+    SSH_OUTPUT=$(ssh git.amazon.com -v 2>&1)
+    if echo "$SSH_OUTPUT" | grep -q "Authenticated to git.amazon.com" || echo "$SSH_OUTPUT" | grep -q "Welcome to GitFarm"; then
+        log "SSH connection to git.amazon.com successful."
+    else
+        log "SSH connection to git.amazon.com failed. Please ensure your credentials are set up correctly."
+        log "You may need to run 'mwinit -s' to set up your session."
+        log "SSH output for debugging:"
+        echo "$SSH_OUTPUT"
         exit 1
     fi
-    log "mwinit check passed."
 }
 
 # Check and install isengardcli
@@ -36,6 +41,21 @@ check_isengardcli() {
     log "isengardcli check passed."
 }
 
+# Function to create AWS profile using isengardcli
+create_aws_profile() {
+    local username="$1"
+    local profile="$2"
+    log "Creating AWS profile '${profile}' for ${username}..."
+    isengardcli add-profile --region us-west-1 --role Admin "${username}@amazon.com"
+    if [ $? -eq 0 ]; then
+        log "AWS profile '${profile}' created successfully."
+        return 0
+    else
+        log "Failed to create AWS profile '${profile}'."
+        return 1
+    fi
+}
+
 # Check and set AWS_PROFILE
 check_aws_profile() {
     log "Checking AWS_PROFILE..."
@@ -44,14 +64,27 @@ check_aws_profile() {
         PROFILE="${USERNAME}-Admin"
         if grep -q "\[profile ${PROFILE}\]" ~/.aws/config; then
             export AWS_PROFILE="${PROFILE}"
-            log "You need to set AWS_PROFILE to ${PROFILE}"
+            log "AWS_PROFILE set to '${PROFILE}'."
         else
-            log "Warning: AWS_PROFILE not set and ${PROFILE} not found in ~/.aws/config"
+            log "Warning: AWS_PROFILE not set and '${PROFILE}' not found in ~/.aws/config"
+            read -p "Do you want to create a new AWS profile? (y/n): " CREATE_PROFILE
+            if [[ $CREATE_PROFILE =~ ^[Yy]$ ]]; then
+                if create_aws_profile "$USERNAME" "$PROFILE"; then
+                    export AWS_PROFILE="${PROFILE}"
+                    log "AWS_PROFILE set to '${PROFILE}'."
+                else
+                    log "Failed to create and set AWS_PROFILE. Please create it manually."
+                    exit 1
+                fi
+            else
+                log "AWS profile creation skipped. Please set up your AWS profile manually."
+                exit 1
+            fi
         fi
     else
-        log "Your AWS_PROFILE was already set to $AWS_PROFILE"
+        log "AWS_PROFILE is set to '$AWS_PROFILE'"
     fi
-
+    log "Using AWS profile: '${AWS_PROFILE}'"
 }
 
 # Check AWS identity
@@ -109,10 +142,8 @@ main() {
     setup_venv
     install_requirements
 
-    # not tested - model is valid and enabled
-    # not tested - structure of markdown directory
-
     log "Setup and verification completed successfully."
 }
 
+# Run main function
 main
